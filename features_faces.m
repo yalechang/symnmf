@@ -1,6 +1,6 @@
 % This script is used to extract different features from faces dataset
 
-clear all, close all, clc
+%clear all, close all, clc
 
 %% Load faces dataset
 load img_faces

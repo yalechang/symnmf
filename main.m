@@ -1,7 +1,10 @@
-%clear all, close all, clc
+% This script implement multi-source alternate clustering
+clear all, close all, clc;
 
 % Parameter Settings
 lambda = 2.00;
+% Number of nearest neighbors in self-tuning spectral clustering
+nn = 7;
 
 % Load faces dataset
 load img_faces
@@ -11,20 +14,10 @@ img_expression = img_faces.expression;
 img_eye = img_faces.eye;
 img = img_faces.data;
 
-% Choose dataset
-X = feat_gabor;
-
-% Compute Distance Matrix
-D = dist2(X,X);
-
-% Compute Affinity matrix
-% Number of nearest neighbors in self-tuning spectral
-nn = 7;
-kk = floor(log2(length(img_eye)))+1;
-% Case 1: dense Gaussian
-A = scale_dist3(D,nn);
-% Case 2: sparse Gaussian
-%A = scale_dist3_knn(D,nn,kk,true);
+% Load extracted features
+load feat_pca
+load feat_gabor
+load feat_hog
 
 % Compute identity assignment matrix
 identity_unique = unique(img_identity);
@@ -37,8 +30,22 @@ for i = 1:length(img_identity)
     end
 end
 
+% Compute similarity matrix from original data
+% Raw data
+D = dist2(img,img);
+aff_raw = scale_dist3(D,nn);
+% PCA features
+D = dist2(feat_pca,feat_pca);
+aff_pca = scale_dist3(D,nn);
+% gabor features
+D = dist2(feat_gabor,feat_gabor);
+aff_gabor = scale_dist3(D,nn);
+% HoG features
+D = dist2(feat_hog,feat_hog);
+aff_hog = scale_dist3(D,nn);
+
 % Define new kernel matrix
-A_new = A-lambda/2*Y*Y';
+A_new = aff_raw-lambda/2*Y*Y';
 
 run_symnmf = 10;
 H_list = {};

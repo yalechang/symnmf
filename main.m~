@@ -1,0 +1,28 @@
+% This script implement multi-source alternate clustering
+clear all, close all, clc;
+
+% Parameter Settings
+lambda = 2.00;
+% Number of nearest neighbors in self-tuning spectral clustering
+nn = 7;
+
+% Load faces dataset
+load img_faces
+img_identity = img_faces.identity;
+img_pose = img_faces.pose;
+img_expression = img_faces.expression;
+img_eye = img_faces.eye;
+img = img_faces.data;
+
+% Load extracted features
+load feat_pca
+load feat_gabor
+load feat_hog
+
+% Construct similarity matrix
+% PCA features
+D = dist2(feat_pca);
+aff_pca = scale_dist3(D,nn);
+% gabor features
+D = dist2(feat_gabor);
+aff_gabor = scale_dist3(D,nn);
