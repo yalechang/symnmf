@@ -1,0 +1,44 @@
+** This software package is developed for the following paper:
+       Da Kuang, Chris Ding, Haesun Park,
+       Symmetric Nonnegative Matrix Factorization for Graph Clustering,
+       The 12th SIAM International Conference on Data Mining (SDM '12), pp. 106--117.
+   Please cite this paper if you find this software useful.
+
+** Symmetric NMF (SymNMF) is defined as:
+       min_H f(H) = ||A - HH'||_F^2 subject to H >= 0
+   where the input A is a n*n symmetric matrix containing pairwise similarity values,
+   and the output H is a n*k nonnegative matrix indicating clustering assignment.
+   SymNMF can be used as a framework for graph clustering. It uses the same similarity
+   matrix A as in spectral clustering, but imposes different constraint on H.
+
+** All these Matlab functions are documented.
+   Please find the helper texts at the beginning of each M-file.
+   To get started, run the script test.m
+
+** A summary of the functions in this software is listed below:
+   symnmf_newton.m     - The core computational routine for SymNMF, accepting a similarity matrix as input
+   symnmf_cluster.m    - A wrapper of symnmf_newton for graph clustering, accepting a data matrix as input
+   scale_dist3.m       - Computes the affinity matrix of a dense graph with Gaussian similarity
+   scale_dist3_knn.m   - Computes the affinity matrix of a sparse graph with Gaussian similarity
+   inner_product_knn.m - Computes the affinity matrix of a sparse graph with inner product similarity
+   dist2.m             - Computes a matrix of squared Euclidean distance values
+   graph.data          - A simple graph clustering example
+   test.m              - A test script running on the graph.data example
+
+** Basic usage:
+   To run SymNMF on a similarity matrix:                  H = symnmf_newton(A, k)
+   To run SymNMF on a data matrix for graph clustering: idx = symnmf_cluster(X, k)
+   Please refer to the documentation for more options.
+
+** NOTE:
+
+   The documentation (as well as the cited paper) differentiates the term
+   'affinity matrix' and the term 'similarity matrix'.
+
+   An affinity matrix contains the raw edge weights in a graph, whereas
+   a similarity matrix is formed based on the affinity matrix and is
+   directly fed into symnmf_newton.
+
+   For example, 'scale_dist3', 'scale_dist3_knn', 'inner_product_knn'
+   routines all compute the affinity matrix; the similarity matrix in
+   normalized cut is a normalized version of the affinity matrix.
