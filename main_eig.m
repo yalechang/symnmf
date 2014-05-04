@@ -61,7 +61,7 @@ aff_hog_norm = deg_hog*aff_hog*deg_hog;
 
 % Define M sources
 %affs = {aff_raw_norm,aff_pca_norm,aff_gabor_norm,aff_hog_norm};
-affs = {aff_gabor_norm,aff_hog_norm};
+affs = {aff_gabor_norm,aff_hog_norm,aff_pca_norm};
 n_sources = length(affs);
 [n_instances,~] = size(aff_raw);
 % Compute dependency between sources
@@ -73,53 +73,53 @@ for i = 1:n_sources
     end
 end
 
-nmi_pose = zeros(length(v_lambda_range),1);
-for v_lambda_idx = 1:length(v_lambda_range)
-    v_lambda = v_lambda_range(v_lambda_idx);
-    % Initialization of res and res_old
-    res = 2;
-    res_old = 1;
-    % Initialization of low-dimensional representation
-    U = rand(n_instances,dim_q);
-    % Initialization of weights
-    beta = ones(n_sources,1)/n_sources;
-    % Count the number of loops
-    n_iter = 0;
-    while abs(res-res_old)/res_old>tol & n_iter<n_iter_max
-        U_old = U;
-        % Convex combination of kernels of M sources
-        aff = zeros(n_instances);
-        for i = 1:n_sources
-            aff = aff+beta(i)*affs{i};
-        end
-        % Find U by eigendecomposition
-        [V,D] = eig(aff-v_lambda/2*aff_Y_norm);
-        U = V(:,1:4);
-        % Find beta by Quadratic Programming
-        beta_old = beta;
-        gamma = zeros(n_sources,1);
-        for i = 1:n_sources
-            gamma(i) = trace(affs{i}*U*U');
-        end
-        G = -eye(n_sources);
-        h = zeros(n_sources,1);
-        A = ones(1,n_sources);
-        b = ones(1);
-        % Use active set algorithm
-        opts = optimoptions('quadprog','Algorithm','active-set','Display','off');
-        beta = quadprog(2*Q,-2*gamma,G,h,A,b,[],[],[],opts);
-        aff_old = zeros(n_instances);
-        for i = 1:n_sources
-            aff_old = aff_old+beta_old(i)*affs{i};
-        end
-        % Compute residue
-        res_old = norm(aff_old-U_old*U_old');
-        res = norm(aff-U*U');
-        n_iter = n_iter+1;
-    end
-    label_pred = kmeans(U,4);
-    nmi_pose(v_lambda_idx) = nmi(label_pred,img_pose);
-    v_lambda_range(v_lambda_idx)
-end
-
-plot(v_lambda_range,nmi_pose);
+% nmi_pose = zeros(length(v_lambda_range),1);
+% for v_lambda_idx = 1:length(v_lambda_range)
+%     v_lambda = v_lambda_range(v_lambda_idx);
+%     % Initialization of res and res_old
+%     res = 2;
+%     res_old = 1;
+%     % Initialization of low-dimensional representation
+%     U = rand(n_instances,dim_q);
+%     % Initialization of weights
+%     beta = ones(n_sources,1)/n_sources;
+%     % Count the number of loops
+%     n_iter = 0;
+%     while abs(res-res_old)/res_old>tol & n_iter<n_iter_max
+%         U_old = U;
+%         % Convex combination of kernels of M sources
+%         aff = zeros(n_instances);
+%         for i = 1:n_sources
+%             aff = aff+beta(i)*affs{i};
+%         end
+%         % Find U by eigendecomposition
+%         [V,D] = eig(aff-v_lambda/2*aff_Y_norm);
+%         U = V(:,1:4);
+%         % Find beta by Quadratic Programming
+%         beta_old = beta;
+%         gamma = zeros(n_sources,1);
+%         for i = 1:n_sources
+%             gamma(i) = trace(affs{i}*U*U');
+%         end
+%         G = -eye(n_sources);
+%         h = zeros(n_sources,1);
+%         A = ones(1,n_sources);
+%         b = ones(1);
+%         % Use active set algorithm
+%         opts = optimoptions('quadprog','Algorithm','active-set','Display','off');
+%         beta = quadprog(2*Q,-2*gamma,G,h,A,b,[],[],[],opts);
+%         aff_old = zeros(n_instances);
+%         for i = 1:n_sources
+%             aff_old = aff_old+beta_old(i)*affs{i};
+%         end
+%         % Compute residue
+%         res_old = norm(aff_old-U_old*U_old');
+%         res = norm(aff-U*U');
+%         n_iter = n_iter+1;
+%     end
+%     label_pred = kmeans(U,4);
+%     nmi_pose(v_lambda_idx) = nmi(label_pred,img_pose);
+%     v_lambda_range(v_lambda_idx)
+% end
+% 
+% plot(v_lambda_range,nmi_pose);
