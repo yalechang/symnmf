@@ -47,7 +47,7 @@ deg_Y = diag(sum(aff_Y).^(-0.5));
 aff_Y_norm = deg_Y*aff_Y*deg_Y;
 
 % Define new kernel matrix
-A_new = aff_gabor_norm-lambda/2*aff_Y_norm;
+A_new = aff_hog_norm-lambda/2*aff_Y_norm;
 
 run_symnmf = 1;
 H_list = {};
