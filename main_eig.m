@@ -92,21 +92,9 @@ for v_lambda_idx = 1:length(v_lambda_range)
         for i = 1:n_sources
             aff = aff+beta(i)*affs{i};
         end
-        % Find U by Newton like algorithm
-        run_symnmf = 10;
-        H_list = {};
-        iter_list = zeros(run_symnmf,1);
-        obj_list = zeros(run_symnmf,1);
-        for i = 1:run_symnmf
-            [H_list{i},iter_list(i),obj_list(i)] = symnmf_newton(aff-...
-                v_lambda/2*aff_Y_norm,4);
-        end
-        for i = 1:run_symnmf
-            if obj_list(i) == min(obj_list)
-                U = H_list{i};
-            break
-            end
-        end
+        % Find U by eigendecomposition
+        [V,D] = eig(aff-v_lambda/2*aff_Y_norm);
+        U = V(:,1:4);
         % Find beta by Quadratic Programming
         beta_old = beta;
         gamma = zeros(n_sources,1);
@@ -129,14 +117,7 @@ for v_lambda_idx = 1:length(v_lambda_range)
         res = norm(aff-U*U');
         n_iter = n_iter+1;
     end
-    label_pred = zeros(length(img_pose),1);
-    for i = 1:length(img_pose)
-        for j = 1:length(unique(img_pose))
-            if U(i,j) == max(U(i,:))
-                label_pred(i) = j;
-            end
-        end
-    end
+    label_pred = kmeans(U,4);
     nmi_pose(v_lambda_idx) = nmi(label_pred,img_pose);
     v_lambda_range(v_lambda_idx)
 end
