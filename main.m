@@ -6,7 +6,7 @@ lambda = 2.0;
 % Number of nearest neighbors in self-tuning spectral clustering
 nn = 7;
 % range of lambda
-v_lambda_range = 0:1:5;
+v_lambda_range = 2;
 % Number of latent factors;
 dim_q = 4;
 % tolerance for convergence
@@ -39,18 +39,27 @@ aff_Y = Y*Y';
 % Raw data
 D = dist2(img,img);
 aff_raw = scale_dist3(D,nn);
+deg_raw = diag(sum(aff_raw).^(-0.5));
+aff_raw_norm = deg_raw*aff_raw*deg_raw;
 % PCA features
 D = dist2(feat_pca,feat_pca);
 aff_pca = scale_dist3(D,nn);
+deg_pca = diag(sum(aff_pca).^(-0.5));
+aff_pca_norm = deg_pca*aff_pca*deg_pca;
 % gabor features
 D = dist2(feat_gabor,feat_gabor);
 aff_gabor = scale_dist3(D,nn);
+deg_gabor = diag(sum(aff_gabor).^(-0.5));
+aff_gabor_norm = deg_gabor*aff_gabor*deg_gabor;
 % HoG features
 D = dist2(feat_hog,feat_hog);
 aff_hog = scale_dist3(D,nn);
+deg_hog = diag(sum(aff_hog).^(-0.5));
+aff_hog_norm = deg_hog*aff_hog*deg_hog;
 
 % Define M sources
-affs = {aff_pca,aff_gabor,aff_hog};
+%affs = {aff_raw_norm,aff_pca_norm,aff_gabor_norm,aff_hog_norm};
+affs = {aff_pca_norm,aff_gabor_norm};
 n_sources = length(affs);
 [n_instances,~] = size(aff_raw);
 % Compute dependency between sources
@@ -91,8 +100,10 @@ for v_lambda_idx = 1:length(v_lambda_range)
         h = zeros(n_sources,1);
         A = ones(1,n_sources);
         b = ones(1);
+        % Use active set algorithm
+        opts = optimoptions('quadprog','Algorithm','active-set','Display','off');
         % Find beta by Quadratic Programming
-        beta = quadprog(2*Q,-2*gamma,G,h,A,b);
+        beta = quadprog(2*Q,-2*gamma,G,h,A,b,[],[],[],opts);
         aff_old = zeros(n_instances);
         for i = 1:n_sources
             aff_old = aff_old+beta_old(i)*affs{i};
@@ -100,39 +111,17 @@ for v_lambda_idx = 1:length(v_lambda_range)
         % Compute residue
         res_old = norm(aff_old-U_old*U_old');
         res = norm(aff-U*U');
-        n_iter = n_iter+1;
+        n_iter = n_iter+1
     end
 end
 
-% % Define new kernel matrix
-% A_new = aff_gabor-lambda/2*Y*Y';
-% 
-% run_symnmf = 10;
-% H_list = {};
-% iter_list = zeros(run_symnmf,1);
-% obj_list = zeros(run_symnmf,1);
-% 
-% for i = 1:run_symnmf
-%     tic
-%     i
-%     [H_list{i},iter_list(i),obj_list(i)] = symnmf_newton(A_new,4);
-%     toc
-% end
-% for i = 1:run_symnmf
-%     if obj_list(i) == min(obj_list)
-%         H = H_list{i};
-%         i
-%         break
-%     end
-% end
-%     
-% label_pred = zeros(length(img_pose),1);
-% for i = 1:length(img_pose)
-%     for j = 1:length(unique(img_pose))
-%         if H(i,j) == max(H(i,:))
-%             label_pred(i) = j;
-%         end
-%     end
-% end
-% 
-% nmi_pose = nmi(label_pred,img_pose);
+label_pred = zeros(length(img_pose),1);
+for i = 1:length(img_pose)
+    for j = 1:length(unique(img_pose))
+        if U(i,j) == max(U(i,:))
+            label_pred(i) = j;
+        end
+    end
+end
+
+nmi_pose = nmi(label_pred,img_pose);
