@@ -2,11 +2,10 @@
 clear all, close all, clc;
 
 % Parameter Settings
-lambda = 2.0;
 % Number of nearest neighbors in self-tuning spectral clustering
 nn = 7;
 % range of lambda
-v_lambda_range = 2;
+v_lambda_range = 1.0;
 % Number of latent factors;
 dim_q = 4;
 % tolerance for convergence
@@ -34,6 +33,8 @@ for i = 1:length(img_identity)
    Y(i,img_identity(i)) = 1;
 end
 aff_Y = Y*Y';
+deg_Y = diag(sum(aff_Y).^(-0.5));
+aff_Y_norm = deg_Y*aff_Y*deg_Y;
 
 % Compute similarity matrix from original data
 % Raw data
@@ -59,7 +60,7 @@ aff_hog_norm = deg_hog*aff_hog*deg_hog;
 
 % Define M sources
 %affs = {aff_raw_norm,aff_pca_norm,aff_gabor_norm,aff_hog_norm};
-affs = {aff_pca_norm,aff_gabor_norm};
+affs = {aff_pca_norm,aff_gabor_norm,aff_hog_norm};
 n_sources = length(affs);
 [n_instances,~] = size(aff_raw);
 % Compute dependency between sources
@@ -90,7 +91,7 @@ for v_lambda_idx = 1:length(v_lambda_range)
             aff = aff+beta(i)*affs{i};
         end
         % Find U by Newton like algorithm
-        [U,iter,obj] = symnmf_newton(aff-v_lambda/2*aff_Y,4);
+        [U,iter,obj] = symnmf_newton(aff-v_lambda/2*aff_Y_norm,4);
         beta_old = beta;
         gamma = zeros(n_sources,1);
         for i = 1:n_sources

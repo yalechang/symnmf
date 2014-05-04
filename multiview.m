@@ -1,7 +1,8 @@
 %clear all, close all, clc
 
 % Parameter Settings
-lambda = 2.00;
+lambda = 1.0;
+nn = 7;
 
 % Load faces dataset
 load img_faces
@@ -10,51 +11,57 @@ img_pose = img_faces.pose;
 img_expression = img_faces.expression;
 img_eye = img_faces.eye;
 img = img_faces.data;
+% Load extracted features
+load feat_pca
+load feat_gabor
+load feat_hog
 
-% Choose dataset
-X = feat_gabor;
-
-% Compute Distance Matrix
-D = dist2(X,X);
-
-% Compute Affinity matrix
-% Number of nearest neighbors in self-tuning spectral
-nn = 7;
-kk = floor(log2(length(img_eye)))+1;
-% Case 1: dense Gaussian
-A = scale_dist3(D,nn);
-% Case 2: sparse Gaussian
-%A = scale_dist3_knn(D,nn,kk,true);
+D = dist2(img,img);
+aff_raw = scale_dist3(D,nn);
+deg_raw = diag(sum(aff_raw).^(-0.5));
+aff_raw_norm = deg_raw*aff_raw*deg_raw;
+% PCA features
+D = dist2(feat_pca,feat_pca);
+aff_pca = scale_dist3(D,nn);
+deg_pca = diag(sum(aff_pca).^(-0.5));
+aff_pca_norm = deg_pca*aff_pca*deg_pca;
+% gabor features
+D = dist2(feat_gabor,feat_gabor);
+aff_gabor = scale_dist3(D,nn);
+deg_gabor = diag(sum(aff_gabor).^(-0.5));
+aff_gabor_norm = deg_gabor*aff_gabor*deg_gabor;
+% HoG features
+D = dist2(feat_hog,feat_hog);
+aff_hog = scale_dist3(D,nn);
+deg_hog = diag(sum(aff_hog).^(-0.5));
+aff_hog_norm = deg_hog*aff_hog*deg_hog;
 
 % Compute identity assignment matrix
 identity_unique = unique(img_identity);
 Y = zeros(length(img_identity),length(identity_unique));
 for i = 1:length(img_identity)
-    for j = 1:length(identity_unique)
-        if img_identity(i) == identity_unique(j)
-            Y(i,j) = 1;
-        end
-    end
+   Y(i,img_identity(i)) = 1;
 end
+aff_Y = Y*Y';
+deg_Y = diag(sum(aff_Y).^(-0.5));
+aff_Y_norm = deg_Y*aff_Y*deg_Y;
 
 % Define new kernel matrix
-A_new = A-lambda/2*Y*Y';
+A_new = aff_gabor_norm-lambda/2*aff_Y_norm;
 
-run_symnmf = 10;
+run_symnmf = 1;
 H_list = {};
 iter_list = zeros(run_symnmf,1);
 obj_list = zeros(run_symnmf,1);
 
 for i = 1:run_symnmf
     tic
-    i
     [H_list{i},iter_list(i),obj_list(i)] = symnmf_newton(A_new,4);
     toc
 end
 for i = 1:run_symnmf
     if obj_list(i) == min(obj_list)
         H = H_list{i};
-        i
         break
     end
 end
