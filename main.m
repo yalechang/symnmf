@@ -5,7 +5,7 @@ clear all, close all, clc;
 % Number of nearest neighbors in self-tuning spectral clustering
 nn = 7;
 % range of lambda
-v_lambda_range = 0:0.1:2.0;
+v_lambda_range = 0:1:10;
 % Number of latent factors;
 dim_q = 4;
 % tolerance for convergence
@@ -61,7 +61,7 @@ aff_hog_norm = deg_hog*aff_hog*deg_hog;
 
 % Define M sources
 %affs = {aff_raw_norm,aff_pca_norm,aff_gabor_norm,aff_hog_norm};
-affs = {aff_gabor_norm,aff_hog_norm,aff_pca};
+affs = {aff_gabor};
 n_sources = length(affs);
 [n_instances,~] = size(aff_raw);
 % Compute dependency between sources
@@ -93,7 +93,7 @@ for v_lambda_idx = 1:length(v_lambda_range)
             aff = aff+beta(i)*affs{i};
         end
         % Find U by Newton like algorithm
-        [U,iter,obj] = symnmf_newton(aff-v_lambda/2*aff_Y_norm,4);
+        [U,iter,obj] = symnmf_newton(aff-v_lambda/2*aff_Y,4);
         beta_old = beta;
         gamma = zeros(n_sources,1);
         for i = 1:n_sources
@@ -129,6 +129,3 @@ for v_lambda_idx = 1:length(v_lambda_range)
 end
 
 plot(v_lambda_range,nmi_pose);
-
-
-
