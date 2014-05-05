@@ -25,6 +25,7 @@ img = img_faces.data;
 load feat_pca
 load feat_gabor
 load feat_hog
+load feat_fft
 
 % Compute identity assignment matrix
 identity_unique = unique(img_identity);
@@ -58,10 +59,15 @@ D = dist2(feat_hog,feat_hog);
 aff_hog = scale_dist3(D,nn);
 deg_hog = diag(sum(aff_hog).^(-0.5));
 aff_hog_norm = deg_hog*aff_hog*deg_hog;
+% FFT features
+D = dist2(feat_fft,feat_fft);
+aff_fft = scale_dist3(D,nn);
+deg_fft = diag(sum(aff_fft).^(-0.5));
+aff_fft_norm = deg_fft*aff_fft*deg_fft;
 
 % Define M sources
 %affs = {aff_raw_norm,aff_pca_norm,aff_gabor_norm,aff_hog_norm};
-affs = {aff_gabor_norm};
+affs = {aff_gabor_norm,aff_fft_norm};
 n_sources = length(affs);
 [n_instances,~] = size(aff_raw);
 % Compute dependency between sources

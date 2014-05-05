@@ -41,7 +41,7 @@ for i = 1:length(img_identity)
 end
 feat_hog = double(cell2mat(feat_hog'));
 
-%% Extract FFT Features(Apply PCA)
+%% Extract FFT Features
 feat_fft = {};
 for i = 1:length(img_identity)
     tmp = abs(fftshift(fft2(reshape(img(i,:),32,30)')));

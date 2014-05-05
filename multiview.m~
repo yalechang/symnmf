@@ -1,7 +1,7 @@
 %clear all, close all, clc
 
 % Parameter Settings
-lambda = 1.5;
+lambda = 1.0;
 nn = 7;
 
 % Load faces dataset
@@ -37,7 +37,7 @@ D = dist2(feat_hog,feat_hog);
 aff_hog = scale_dist3(D,nn);
 deg_hog = diag(sum(aff_hog).^(-0.5));
 aff_hog_norm = deg_hog*aff_hog*deg_hog;
-% FFT features
+%% FFT features
 D = dist2(feat_fft,feat_fft);
 aff_fft = scale_dist3(D,nn);
 deg_fft = diag(sum(aff_fft).^(-0.5));
